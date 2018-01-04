@@ -1939,6 +1939,19 @@ static void describe_ctx_ring(struct seq_file *m, struct intel_ring *ring)
 		   ring->space, ring->head, ring->tail, ring->emit);
 }
 
+static void describe_ctx_ring_shadowed(struct seq_file *m,
+		struct i915_gem_context *ctx, struct intel_ring *ring,
+		struct intel_engine_cs *engine)
+{
+	int pid, cid, vgt_id;
+
+	sscanf(ctx->name, "Shadow Context %d", &vgt_id);
+	pid = intel_read_status_page(engine, I915_GEM_HWS_PID_INDEX + vgt_id);
+	cid = intel_read_status_page(engine, I915_GEM_HWS_CID_INDEX + vgt_id);
+	seq_printf(m, " (Current DomU Process PID: %d, CID: %d)",
+			pid, cid);
+}
+
 static int i915_context_status(struct seq_file *m, void *unused)
 {
 	struct drm_i915_private *dev_priv = node_to_i915(m->private);
@@ -1953,6 +1966,7 @@ static int i915_context_status(struct seq_file *m, void *unused)
 		return ret;
 
 	list_for_each_entry(ctx, &dev_priv->contexts.list, link) {
+		bool is_shadow_context = false;
 		seq_puts(m, "HW context ");
 		if (!list_empty(&ctx->hw_id_link))
 			seq_printf(m, "%x [pin %u]", ctx->hw_id,
@@ -1966,6 +1980,9 @@ static int i915_context_status(struct seq_file *m, void *unused)
 					   task->comm, task->pid);
 				put_task_struct(task);
 			}
+		} else if (ctx->name && !strncmp(ctx->name, "Shadow Context", 14)) {
+			seq_puts(m, "DomU Shadow Context ");
+			is_shadow_context = true;
 		} else if (IS_ERR(ctx->file_priv)) {
 			seq_puts(m, "(deleted) ");
 		} else {
@@ -1978,12 +1995,19 @@ static int i915_context_status(struct seq_file *m, void *unused)
 		for_each_engine(engine, dev_priv, id) {
 			struct intel_context *ce =
 				to_intel_context(ctx, engine);
+			u64 lrc_desc = ce->lrc_desc;
 
+			seq_printf(m, "ctx id 0x%x ", (uint32_t)((lrc_desc >> 12) &
+					0xFFFFF));
 			seq_printf(m, "%s: ", engine->name);
 			if (ce->state)
 				describe_obj(m, ce->state->obj);
-			if (ce->ring)
+			if (ce->ring) {
 				describe_ctx_ring(m, ce->ring);
+				if(is_shadow_context)
+					describe_ctx_ring_shadowed(m, ctx,
+							ce->ring, engine);
+			}
 			seq_putc(m, '\n');
 		}
 

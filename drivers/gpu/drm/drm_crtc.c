@@ -413,6 +413,9 @@ int drm_mode_getcrtc(struct drm_device *dev,
 
 	plane = crtc->primary;
 
+	if (!crtc->primary)
+		return -EINVAL;
+
 	crtc_resp->gamma_size = crtc->gamma_size;
 
 	drm_modeset_lock(&plane->mutex, NULL);
@@ -464,6 +467,9 @@ static int __drm_mode_set_config_internal(struct drm_mode_set *set,
 	struct drm_crtc *tmp;
 	int ret;
 
+	if (!crtc->primary)
+		return -EINVAL;
+
 	WARN_ON(drm_drv_uses_atomic_modeset(crtc->dev));
 
 	/*
@@ -473,6 +479,8 @@ static int __drm_mode_set_config_internal(struct drm_mode_set *set,
 	 */
 	drm_for_each_crtc(tmp, crtc->dev) {
 		struct drm_plane *plane = tmp->primary;
+		if (!tmp->primary)
+			continue;
 
 		plane->old_fb = plane->fb;
 	}
@@ -489,6 +497,8 @@ static int __drm_mode_set_config_internal(struct drm_mode_set *set,
 
 	drm_for_each_crtc(tmp, crtc->dev) {
 		struct drm_plane *plane = tmp->primary;
+		if (!tmp->primary)
+			continue;
 
 		if (plane->fb)
 			drm_framebuffer_get(plane->fb);
@@ -608,6 +618,9 @@ retry:
 	ret = drm_modeset_lock_all_ctx(crtc->dev, &ctx);
 	if (ret)
 		goto out;
+
+	if (!crtc->primary)
+		return -EINVAL;
 
 	if (crtc_req->mode_valid) {
 		/* If we have a mode we need a framebuffer. */

@@ -15590,8 +15590,8 @@ out:
 
 static int intel_sanitize_plane_restriction(struct drm_i915_private *dev_priv)
 {
-	/*plane restriction feature is only for APL for now*/
-	if (!IS_BROXTON(dev_priv)) {
+	/*plane restriction feature is only for APL and KBL for now*/
+	if (!(IS_BROXTON(dev_priv) || IS_KABYLAKE(dev_priv))) {
 		i915_modparams.avail_planes_per_pipe = 0;
 		DRM_INFO("Turning off Plane Restrictions feature\n");
 	}

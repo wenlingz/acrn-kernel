@@ -886,6 +886,7 @@ static int i915_driver_init_early(struct drm_i915_private *dev_priv)
 		return -ENODEV;
 
 	spin_lock_init(&dev_priv->irq_lock);
+	spin_lock_init(&dev_priv->shared_page_lock);
 	spin_lock_init(&dev_priv->gpu_error.lock);
 	mutex_init(&dev_priv->backlight_lock);
 	spin_lock_init(&dev_priv->uncore.lock);

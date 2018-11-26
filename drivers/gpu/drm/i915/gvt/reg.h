@@ -86,13 +86,6 @@
 
 #define PCH_GPIO_BASE	_MMIO(0xc5010)
 
-#define PCH_GMBUS0	_MMIO(0xc5100)
-#define PCH_GMBUS1	_MMIO(0xc5104)
-#define PCH_GMBUS2	_MMIO(0xc5108)
-#define PCH_GMBUS3	_MMIO(0xc510c)
-#define PCH_GMBUS4	_MMIO(0xc5110)
-#define PCH_GMBUS5	_MMIO(0xc5120)
-
 #define TRVATTL3PTRDW(i)	_MMIO(0x4de0 + (i) * 4)
 #define TRNULLDETCT		_MMIO(0x4de8)
 #define TRINVTILEDETCT		_MMIO(0x4dec)
